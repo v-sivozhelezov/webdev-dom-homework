@@ -41,10 +41,15 @@
         fetch(
             'https://wedev-api.sky.pro/api/v1/sivozhelezov/comments',
             {
-                method: 'GET'
+                method: 'GET',
             })
             .then((response) => {
-                return response.json();
+                if (response.status === 200) {
+                    return response.json();
+                }
+                if (response.status === 500) {
+                    throw new Error(500);
+                }
             })
             .then((responseData) => {
                 userComments = responseData.comments.map((comment) => {
@@ -53,10 +58,10 @@
                         date: getDate(comment.date),
                         text: comment.text,
                         likes: comment.likes,
-                        isLiked: false
+                        isLiked: false,
                     };
                 })
-                return responseData
+                // return responseData
             })
             .then((response) => {
                 isLoading = 'render';
@@ -82,8 +87,21 @@
                 nameInputElement.addEventListener("keyup", addCommentEnter);
                 commentInputElement.addEventListener("keyup", addCommentEnter);
 
+                nameInputElement.value = '';
+                commentInputElement.value = '';
+
                 putLike();
                 replyToComment();
+            })
+            .catch((error) => {
+                if (error.message === '500') {
+                    alert('Кажется, сервер сломался :( Подождите, повторный запрос выполнится автоматически');
+                    setTimeout(addComment, 2000)
+                }
+                else {
+                    alert('Кажется, у Вас пропал интернет :( Попробуйте позже');
+                }
+                console.log(error.message);
             })
     }
 
@@ -141,7 +159,7 @@
     function addComment() {
         if (nameInputElement.value && commentInputElement.value) {
             isLoading = 'addComment';
-            renderComments();
+            // renderComments();
 
             //Добавление данных в API
             fetch('https://wedev-api.sky.pro/api/v1/sivozhelezov/comments',
@@ -149,16 +167,38 @@
                     method: 'POST',
                     body: JSON.stringify({
                         text: sanitizeHTML(commentInputElement.value),
-                        name: sanitizeHTML(nameInputElement.value)
+                        name: sanitizeHTML(nameInputElement.value),
+                        forceError: true
                     })
+                })
+                .then((response) => {
+                    if (response.status === 201) {
+                        return response;
+                    }
+                    if (response.status === 400) {
+                        throw new Error(400);
+                    }
+                    if (response.status === 500) {
+                        throw new Error(500);
+                    }
                 })
                 .then((response) => {
                     getData();
                     activeButton();
-                });
+                })
+                .catch((error) => {
+                    if (error.message === '400') {
+                        alert('Имя и комментарий должны быть длинее 3 символов');
+                    } else if (error.message === '500') {
+                        alert('Кажется, сервер сломался :( Подождите, повторный запрос выполнится автоматически');
+                        setTimeout(addComment, 2000)
+                    }
+                    else {
+                        alert('У Вас пропал интернет :( Попробуйте позже');
+                    }
+                    console.log(error.message);
+                })
         };
-        nameInputElement.value = '';
-        commentInputElement.value = '';
     }
 
     //Функция ответа на комментарий
@@ -235,8 +275,8 @@
 
             })
                 .join('');
-                commentsElement.innerHTML = userCommentsHtml;
-                putLike();
+            commentsElement.innerHTML = userCommentsHtml;
+            putLike();
         }
 
         replyToComment();
