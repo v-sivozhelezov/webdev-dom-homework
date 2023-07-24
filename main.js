@@ -1,26 +1,20 @@
 "use strict";
 
-import { getAPIData, transferAPIData } from "./api.js";
-import { sanitizeHTML } from "./sanitizeHTML.js";
-import { renderComments } from "./renderComments.js";
+import { getAPIData, getAuthorizedAPIData, likeAPI } from "./api.js";
+import { renderLogin } from "./renderHTML.js";
 import { getDate } from "./getDate.js";
 
-
-// Код писать здесь
-let nameInputElement = document.getElementById('name-input');
-export let commentInputElement = document.getElementById('comment-input');
-let buttonElement = document.getElementById('add-form-button');
-
-let userComments = [];
-let isLoading = 'firstLoad';
+export let userComments = [];
+export let isLoading = 'firstLoad';
 
 //Функция получения данных из API при загрузке страницы
 function getData() {
-    renderComments({ isLoading, userComments, commentInputElement });
+    renderLogin({ isLoading, userComments });
     getAPIData()
         .then((responseData) => {
             userComments = responseData.comments.map((comment) => {
                 return {
+                    id: comment.id,
                     name: comment.author.name,
                     date: getDate(comment.date),
                     text: comment.text,
@@ -31,32 +25,7 @@ function getData() {
         })
         .then(() => {
             isLoading = 'render';
-            renderComments({ isLoading, userComments, commentInputElement });
-            nameInputElement = document.getElementById('name-input');
-            commentInputElement = document.getElementById('comment-input');
-            buttonElement = document.getElementById('add-form-button');
-
-            // Выключение кнопки
-            buttonElement.classList.add("inactive-button");
-            buttonElement.disabled = true;
-
-            //Проверка полей ввода на наличие введенных данных
-            nameInputElement.addEventListener('input', activeButton);
-            commentInputElement.addEventListener('input', activeButton);
-
-            // Добавление комментария кнопкой "Написать"
-            buttonElement.addEventListener("click", () => {
-                addComment();
-            })
-
-            //Добавление комментария клавишей Enter
-            nameInputElement.addEventListener("keyup", addCommentEnter);
-            commentInputElement.addEventListener("keyup", addCommentEnter);
-
-            nameInputElement.value = '';
-            commentInputElement.value = '';
-            // replyToComment({ userComments, commentInputElement });
-
+            renderLogin({ isLoading, userComments });
         })
         .catch((error) => {
             if (error.message === '500') {
@@ -70,49 +39,88 @@ function getData() {
         })
 }
 
-//Функция включения кнопки
-function activeButton() {
-    if (nameInputElement.value && commentInputElement.value) {
-        buttonElement.classList.remove("inactive-button");
-        buttonElement.disabled = false;
-    } else {
-        buttonElement.classList.add("inactive-button");
-        buttonElement.disabled = true;
-    }
-}
-
-//Функция добавления коментария клавишей Enter
-function addCommentEnter(key) {
-    if (nameInputElement.value && commentInputElement.value) {
-        if (key.code === "Enter") {
-            addComment();
-        }
-    }
-}
-
-//Функция добавления объекта комментария в массив
-function addComment() {
-    if (nameInputElement.value && commentInputElement.value) {
-        isLoading = 'addComment';
-
-        transferAPIData({ nameInputElement, commentInputElement, sanitizeHTML })
-            .then(() => {
-                getData();
-                activeButton();
+//Функция получения данных из API после авторизации
+export function getAuthorizedData({ renderComments, isLoading, token }) {
+    renderComments({ isLoading, userComments });
+    getAuthorizedAPIData({token})
+        .then((responseData) => {
+            userComments = responseData.comments.map((comment) => {
+                return {
+                    id: comment.id,
+                    name: comment.author.name,
+                    date: getDate(comment.date),
+                    text: comment.text,
+                    likes: comment.likes,
+                    isLiked: comment.isLiked
+                };
             })
-            .catch((error) => {
-                if (error.message === '400') {
-                    alert('Имя и комментарий должны быть длинее 3 символов');
-                } else if (error.message === '500') {
-                    alert('Кажется, сервер сломался :( Подождите, повторный запрос выполнится автоматически');
-                    setTimeout(addComment, 2000)
-                }
-                else {
-                    alert('У Вас пропал интернет :( Попробуйте позже');
-                }
-                console.log(error.message);
-            })
-    };
+        })
+        .then(() => {
+            isLoading = 'render';
+            renderComments({ isLoading, userComments });
+        })
+        .catch((error) => {
+            if (error.message === '500') {
+                alert('Кажется, сервер сломался :( Подождите, повторный запрос выполнится автоматически');
+                setTimeout(addComment, 2000)
+            }
+            else {
+                alert('Кажется, у Вас пропал интернет :( Попробуйте позже');
+            }
+            console.log(error.message);
+        })
 }
+
+//Функция получения лайков
+export function getLikes({ renderComments, isLoading, likeID, token }) {
+    likeAPI({ likeID, token })
+        .then((response) => {
+            return response;
+        })
+        .then(() => {
+            getAuthorizedAPIData({token, renderComments})
+                .then((responseData) => {
+                    userComments = responseData.comments.map((comment) => {
+                        return {
+                            id: comment.id,
+                            name: comment.author.name,
+                            date: getDate(comment.date),
+                            text: comment.text,
+                            likes: comment.likes,
+                            isLiked: comment.isLiked
+                        };
+                    })
+                })
+                .then(() => {
+                    isLoading = 'likeСhange';
+                    renderComments({ isLoading, userComments });
+                })
+                .catch((error) => {
+                    if (error.message === '500') {
+                        alert('Кажется, сервер сломался :( Подождите, повторный запрос выполнится автоматически');
+                        setTimeout(addComment, 2000)
+                    }
+                    else {
+                        alert('Кажется, у Вас пропал интернет :( Попробуйте позже');
+                    }
+                    console.log(error.message);
+                })
+        })
+        .catch((error) => {
+            if (error.message === '500') {
+                alert('Кажется, сервер сломался :( Подождите, повторный запрос выполнится автоматически');
+                setTimeout(addComment, 2000)
+            }
+            else {
+                alert('Кажется, у Вас пропал интернет :( Попробуйте позже');
+            }
+            console.log(error.message);
+        })
+}
+
+
+
+
+
 
 getData();
