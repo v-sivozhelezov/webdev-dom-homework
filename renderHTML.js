@@ -14,7 +14,7 @@ export let passwordInputElement;
 import { putLike } from "./putLike.js";
 import { replyToComment } from "./replyToComment.js";
 import { transferAPILogin, transferAPIData } from "./api.js";
-import { getAuthorizedData, isLoading, userComments } from "./main.js";
+import { getAuthorizedData, isLoading, userComments } from "./index.js";
 import { sanitizeHTML } from "./sanitizeHTML.js";
 
 
@@ -185,7 +185,7 @@ export function renderLogin({ isLoading, userComments }) {
     </div>`;
         const enterButtonElement = document.getElementById("add-form-button-authorization");
         enterButtonElement.addEventListener('click', () => {
-            clickButtonEnter({isLoading})
+            clickButtonEnter({ isLoading })
         })
     }
 }

@@ -1,6 +1,6 @@
 //Функция активации лайка
 import { likeAPI } from "./api.js";
-import { getLikes } from "./main.js";
+import { getLikes } from "./index.js";
 import { renderComments } from "./renderHTML.js";
 
 

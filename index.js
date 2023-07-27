@@ -3,6 +3,7 @@
 import { getAPIData, getAuthorizedAPIData, likeAPI } from "./api.js";
 import { renderLogin } from "./renderHTML.js";
 import { getDate } from "./getDate.js";
+import { format } from "date-fns";
 
 export let userComments = [];
 export let isLoading = 'firstLoad';
@@ -16,7 +17,7 @@ function getData() {
                 return {
                     id: comment.id,
                     name: comment.author.name,
-                    date: getDate(comment.date),
+                    date: format(new Date(comment.date), 'yyyy-MM-dd hh.mm.ss'),
                     text: comment.text,
                     likes: comment.likes,
                     isLiked: false,
@@ -48,7 +49,7 @@ export function getAuthorizedData({ renderComments, isLoading, token }) {
                 return {
                     id: comment.id,
                     name: comment.author.name,
-                    date: getDate(comment.date),
+                    date: format(new Date(comment.date), 'yyyy-MM-dd hh.mm.ss'),
                     text: comment.text,
                     likes: comment.likes,
                     isLiked: comment.isLiked
@@ -84,7 +85,7 @@ export function getLikes({ renderComments, isLoading, likeID, token }) {
                         return {
                             id: comment.id,
                             name: comment.author.name,
-                            date: getDate(comment.date),
+                            date: format(new Date(comment.date), 'yyyy-MM-dd hh.mm.ss'),
                             text: comment.text,
                             likes: comment.likes,
                             isLiked: comment.isLiked
@@ -117,10 +118,4 @@ export function getLikes({ renderComments, isLoading, likeID, token }) {
             console.log(error.message);
         })
 }
-
-
-
-
-
-
 getData();

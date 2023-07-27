@@ -91,7 +91,7 @@ export function likeAPI({ likeID, token }) {
 }
 
 //Функция получения данных из API после авторизации
-export function getAuthorizedAPIData({token}) {
+export function getAuthorizedAPIData({ token }) {
     return fetch(commentsURL,
         {
             method: 'GET',
