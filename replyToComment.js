@@ -1,5 +1,5 @@
 //Функция ответа на комментарий
-import { commentInputElement } from "./main.js";
+// import { commentInputElement } from "./main.js";
 export function replyToComment({ userComments}) {
     const commentsCardElements = document.querySelectorAll('.comment');
     for (const commentCardElement of commentsCardElements) {

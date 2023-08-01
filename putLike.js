@@ -1,21 +1,20 @@
 //Функция активации лайка
-import { renderComments } from "./renderComments.js";
+import { likeAPI } from "./api.js";
+import { getLikes } from "./index.js";
+import { renderComments } from "./renderHTML.js";
 
 
-export function putLike({userComments, isLoading,commentInputElement}) {
-    const likeButtonElements = document.querySelectorAll('.like-button');
+
+export function putLike({ userComments, isLoading, commentInputElement, likeButtonElements, token }) {
+    // const likeButtonElements = document.querySelectorAll('.like-button');
     for (const likeButtonElement of likeButtonElements) {
         likeButtonElement.addEventListener('click', (event) => {
+            console.log('like');
             isLoading = 'likeСhange';
-            const index = likeButtonElement.dataset.index;
-            if (userComments[index].isLiked === true) {
-                userComments[index].isLiked = false;
-                userComments[index].likes--;
-            } else {
-                userComments[index].isLiked = true;
-                userComments[index].likes++;
-            }
-            renderComments({ isLoading, userComments, commentInputElement });
+            const likeID = likeButtonElement.dataset.index;
+
+            getLikes({ renderComments, isLoading, likeID, token });
+            // renderComments({ isLoading, userComments, commentInputElement });
             event.stopPropagation();
         })
     }
